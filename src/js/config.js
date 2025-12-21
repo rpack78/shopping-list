@@ -6,8 +6,9 @@ const CONFIG = {
   google: {
     // Get these from Google Cloud Console
     // https://console.cloud.google.com/
-    clientId: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
-    apiKey: "YOUR_GOOGLE_API_KEY",
+    clientId:
+      "431554141668-gvu6gdfjmp9uvtehjd2qinsn9o070hu9.apps.googleusercontent.com",
+    apiKey: "AIzaSyACbRnIlrpkwYvK76HTFBrYI0dGviuS_nI", // Can use same key as Vision API
 
     // Scopes needed for the app
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
@@ -20,7 +21,7 @@ const CONFIG = {
   sheets: {
     // Your Google Sheets spreadsheet ID
     // Get this from the URL: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit
-    spreadsheetId: "YOUR_SPREADSHEET_ID",
+    spreadsheetId: "1CR4jZe0Q-lJz5T33ecKfUz4Yn9NrV_dPPeClmy_No0g",
 
     // Sheet names
     shoppingListSheet: "Shopping List",
@@ -29,7 +30,7 @@ const CONFIG = {
 
   // Google Vision API Configuration
   vision: {
-    apiKey: "YOUR_VISION_API_KEY",
+    apiKey: "AIzaSyACbRnIlrpkwYvK76HTFBrYI0dGviuS_nI",
     endpoint: "https://vision.googleapis.com/v1/images:annotate",
   },
 
