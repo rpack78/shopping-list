@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4CAF50">
+  <meta name="description" content="Smart shopping list with voice input and cloud sync">
+  <title>Shopping List</title>
+  <link rel="stylesheet" href="src/css/styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="src/assets/icons/icon-192x192.png">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <div class="header-content">
+        <h1>🛒 Shopping List</h1>
+        <div class="header-actions">
+          <button id="refreshBtn" class="icon-btn" title="Refresh">
+            <span class="icon">🔄</span>
+          </button>
+          <button id="settingsBtn" class="icon-btn" title="Settings">
+            <span class="icon">⚙️</span>
+          </button>
+        </div>
+      </div>
+      <div id="statusBar" class="status-bar hidden">
+        <span id="statusText"></span>
+      </div>
+    </header>
+
+    <!-- Auth Section -->
+    <div id="authSection" class="auth-section">
+      <div class="auth-card">
+        <h2>Welcome!</h2>
+        <p>Sign in with Google to sync your shopping list</p>
+        <button id="signInBtn" class="primary-btn">Sign In with Google</button>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+      <!-- Add Item Section -->
+      <section class="add-item-section">
+        <div class="input-group">
+          <input type="text" id="itemInput" placeholder="Add an item..." autocomplete="off" />
+          <button id="voiceBtn" class="icon-btn voice-btn" title="Voice input">
+            <span class="icon">🎤</span>
+          </button>
+          <button id="cameraBtn" class="icon-btn" title="Scan list">
+            <span class="icon">📷</span>
+          </button>
+        </div>
+        <div class="category-select-group">
+          <select id="categorySelect">
+            <option value="">Select category...</option>
+          </select>
+          <button id="addItemBtn" class="primary-btn" disabled>Add</button>
+        </div>
+      </section>
+
+      <!-- Shopping List -->
+      <section class="shopping-list">
+        <div id="listContainer">
+          <!-- Items will be dynamically inserted here -->
+        </div>
+        <div id="emptyState" class="empty-state">
+          <p>🎉 Your list is empty!</p>
+          <p class="text-muted">Add items to get started</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Category Management Modal -->
+    <div id="categoryModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Manage Categories</h2>
+          <button class="close-btn" id="closeCategoryModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="category-form">
+            <input type="text" id="newCategoryName" placeholder="New category name">
+            <input type="number" id="newCategoryOrder" placeholder="Store order" min="1">
+            <button id="addCategoryBtn" class="primary-btn">Add Category</button>
+          </div>
+          <div id="categoryList" class="category-list">
+            <!-- Categories will be listed here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo OCR Modal -->
+    <div id="ocrModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Add Items from Photo</h2>
+          <button class="close-btn" id="closeOcrModal">×</button>
+        </div>
+        <div class="modal-body">
+          <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+          <div id="ocrPreview" class="ocr-preview hidden">
+            <img id="previewImage" alt="Captured image">
+          </div>
+          <button id="selectPhotoBtn" class="primary-btn">Select Photo</button>
+          <div id="ocrLoading" class="hidden">
+            <div class="spinner"></div>
+            <p>Processing image...</p>
+          </div>
+          <div id="ocrResults" class="ocr-results hidden">
+            <!-- OCR results will appear here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Voice Listening Indicator -->
+    <div id="voiceIndicator" class="voice-indicator hidden">
+      <div class="pulse-ring"></div>
+      <span class="icon">🎤</span>
+      <p>Listening...</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="src/js/config.js"></script>
+  <script src="src/js/sheets.js"></script>
+  <script src="src/js/categories.js"></script>
+  <script src="src/js/voice.js"></script>
+  <script src="src/js/vision.js"></script>
+  <script src="src/js/ui.js"></script>
+  <script src="src/js/app.js"></script>
+</body>
+
+</html>

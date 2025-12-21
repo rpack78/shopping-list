@@ -1,0 +1,259 @@
+// Google Sheets API Integration
+const SheetsAPI = {
+  isAuthenticated: false,
+  tokenClient: null,
+  accessToken: null,
+
+  // Initialize Google API
+  async init() {
+    return new Promise((resolve, reject) => {
+      // Load Google API client
+      const script = document.createElement("script");
+      script.src = "https://apis.google.com/js/api.js";
+      script.onload = () => {
+        gapi.load("client", async () => {
+          try {
+            await gapi.client.init({
+              apiKey: CONFIG.google.apiKey,
+              discoveryDocs: CONFIG.google.discoveryDocs,
+            });
+            console.log("Google API client initialized");
+            resolve();
+          } catch (error) {
+            console.error("Error initializing Google API:", error);
+            reject(error);
+          }
+        });
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+
+      // Load Google Identity Services
+      const gsiScript = document.createElement("script");
+      gsiScript.src = "https://accounts.google.com/gsi/client";
+      gsiScript.onload = () => {
+        this.tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CONFIG.google.clientId,
+          scope: CONFIG.google.scopes.join(" "),
+          callback: (response) => {
+            if (response.access_token) {
+              this.accessToken = response.access_token;
+              gapi.client.setToken({ access_token: response.access_token });
+              this.isAuthenticated = true;
+              if (window.onAuthSuccess) {
+                window.onAuthSuccess();
+              }
+            }
+          },
+        });
+      };
+      document.head.appendChild(gsiScript);
+    });
+  },
+
+  // Request authentication
+  async authenticate() {
+    if (!this.tokenClient) {
+      throw new Error("Token client not initialized");
+    }
+
+    // Request an access token
+    this.tokenClient.requestAccessToken({ prompt: "consent" });
+  },
+
+  // Sign out
+  signOut() {
+    if (this.accessToken) {
+      google.accounts.oauth2.revoke(this.accessToken);
+      this.accessToken = null;
+    }
+    this.isAuthenticated = false;
+    gapi.client.setToken(null);
+  },
+
+  // Read from spreadsheet
+  async read(range) {
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: CONFIG.sheets.spreadsheetId,
+        range: range,
+      });
+      return response.result.values || [];
+    } catch (error) {
+      console.error("Error reading from sheet:", error);
+      throw error;
+    }
+  },
+
+  // Write to spreadsheet
+  async write(range, values) {
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: CONFIG.sheets.spreadsheetId,
+        range: range,
+        valueInputOption: "USER_ENTERED",
+        resource: {
+          values: values,
+        },
+      });
+      return response.result;
+    } catch (error) {
+      console.error("Error writing to sheet:", error);
+      throw error;
+    }
+  },
+
+  // Append to spreadsheet
+  async append(range, values) {
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: CONFIG.sheets.spreadsheetId,
+        range: range,
+        valueInputOption: "USER_ENTERED",
+        insertDataOption: "INSERT_ROWS",
+        resource: {
+          values: values,
+        },
+      });
+      return response.result;
+    } catch (error) {
+      console.error("Error appending to sheet:", error);
+      throw error;
+    }
+  },
+
+  // Delete rows
+  async deleteRow(sheetId, rowIndex) {
+    try {
+      const response = await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: CONFIG.sheets.spreadsheetId,
+        resource: {
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId: sheetId,
+                  dimension: "ROWS",
+                  startIndex: rowIndex,
+                  endIndex: rowIndex + 1,
+                },
+              },
+            },
+          ],
+        },
+      });
+      return response.result;
+    } catch (error) {
+      console.error("Error deleting row:", error);
+      throw error;
+    }
+  },
+
+  // Get all shopping list items
+  async getShoppingList() {
+    const range = `${CONFIG.sheets.shoppingListSheet}!A2:F`;
+    const rows = await this.read(range);
+
+    return rows.map((row, index) => ({
+      rowIndex: index + 2, // +2 because row 1 is header and array is 0-indexed
+      item: row[0] || "",
+      category: row[1] || "",
+      checked: row[2] === "TRUE" || row[2] === true,
+      addedBy: row[3] || "",
+      timestamp: row[4] || "",
+      order: parseInt(row[5]) || 0,
+    }));
+  },
+
+  // Add new item
+  async addItem(item, category, addedBy = "User") {
+    const timestamp = new Date().toISOString();
+    const order = Date.now(); // Use timestamp as order for new items
+
+    const values = [[item, category, false, addedBy, timestamp, order]];
+
+    const range = `${CONFIG.sheets.shoppingListSheet}!A:F`;
+    await this.append(range, values);
+
+    // Increment category use count
+    await Categories.incrementUseCount(category);
+  },
+
+  // Update item checked status
+  async updateItemChecked(rowIndex, checked) {
+    const order = checked ? Date.now() + 999999999999 : Date.now(); // Checked items go to bottom
+    const range = `${CONFIG.sheets.shoppingListSheet}!C${rowIndex}:F${rowIndex}`;
+    const values = [[checked, "", "", order]];
+    await this.write(range, values);
+  },
+
+  // Update item
+  async updateItem(rowIndex, item, category) {
+    const range = `${CONFIG.sheets.shoppingListSheet}!A${rowIndex}:B${rowIndex}`;
+    const values = [[item, category]];
+    await this.write(range, values);
+  },
+
+  // Delete item
+  async deleteItem(rowIndex) {
+    // Note: This is simplified. In production, you'd need to get the sheet ID first
+    // For now, we'll just clear the row
+    const range = `${CONFIG.sheets.shoppingListSheet}!A${rowIndex}:F${rowIndex}`;
+    const values = [["", "", "", "", "", ""]];
+    await this.write(range, values);
+  },
+
+  // Clear all checked items
+  async clearCheckedItems() {
+    const items = await this.getShoppingList();
+    const checkedItems = items.filter((item) => item.checked);
+
+    for (const item of checkedItems) {
+      await this.deleteItem(item.rowIndex);
+    }
+  },
+
+  // Initialize sheets (create headers if needed)
+  async initializeSheets() {
+    try {
+      // Check if headers exist
+      const shoppingListRange = `${CONFIG.sheets.shoppingListSheet}!A1:F1`;
+      const categoriesRange = `${CONFIG.sheets.categoriesSheet}!A1:C1`;
+
+      const shoppingHeaders = await this.read(shoppingListRange);
+      if (!shoppingHeaders.length) {
+        await this.write(shoppingListRange, [
+          ["item", "category", "checked", "addedBy", "timestamp", "order"],
+        ]);
+      }
+
+      const categoryHeaders = await this.read(categoriesRange);
+      if (!categoryHeaders.length) {
+        await this.write(categoriesRange, [
+          ["category", "storeOrder", "useCount"],
+        ]);
+
+        // Add default categories
+        const defaultCategories = [
+          ["Produce", 1, 0],
+          ["Dairy", 2, 0],
+          ["Meat", 3, 0],
+          ["Bakery", 4, 0],
+          ["Frozen", 5, 0],
+          ["Pantry", 6, 0],
+          ["Beverages", 7, 0],
+          ["Snacks", 8, 0],
+          ["Other", 9, 0],
+        ];
+
+        await this.append(
+          `${CONFIG.sheets.categoriesSheet}!A:C`,
+          defaultCategories
+        );
+      }
+    } catch (error) {
+      console.error("Error initializing sheets:", error);
+      throw error;
+    }
+  },
+};

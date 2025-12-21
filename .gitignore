@@ -1,0 +1,11 @@
+# Shopping List PWA - Project Files
+
+node_modules/
+.DS_Store
+.vscode/
+*.log
+.env
+.env.local
+
+# Don't ignore the config.js file since it contains the template
+# Users need to edit it with their credentials

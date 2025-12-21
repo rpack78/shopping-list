@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping List - Setup Guide</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      line-height: 1.6;
+      background: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #4CAF50;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 0.5rem;
+    }
+
+    h2 {
+      color: #333;
+      margin-top: 2rem;
+    }
+
+    .step {
+      background: #f9f9f9;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-left: 4px solid #4CAF50;
+      border-radius: 4px;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left-color: #ffc107;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-left: 4px solid #ffc107;
+      border-radius: 4px;
+    }
+
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .button {
+      display: inline-block;
+      background: #4CAF50;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-top: 1rem;
+    }
+
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .checklist li:before {
+      content: "☐ ";
+      margin-right: 0.5rem;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🛒 Shopping List PWA - Setup Guide</h1>
+
+    <div class="warning">
+      <strong>⚠️ Important:</strong> Before you can use this app, you need to configure it with your Google API
+      credentials. Follow the steps below carefully.
+    </div>
+
+    <h2>Quick Setup Checklist</h2>
+    <ul class="checklist">
+      <li>Create Google Cloud project</li>
+      <li>Enable Google Sheets API</li>
+      <li>Enable Google Vision API</li>
+      <li>Create OAuth 2.0 credentials</li>
+      <li>Create API key for Vision API</li>
+      <li>Create Google Spreadsheet with proper structure</li>
+      <li>Update config.js with your credentials</li>
+      <li>Generate PWA icons</li>
+      <li>Test locally</li>
+      <li>Deploy to hosting service</li>
+    </ul>
+
+    <h2>Step 1: Google Cloud Console</h2>
+    <div class="step">
+      <p><strong>1.1</strong> Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>
+      </p>
+      <p><strong>1.2</strong> Create a new project named "Shopping List"</p>
+      <p><strong>1.3</strong> Enable these APIs:</p>
+      <ul>
+        <li>Google Sheets API</li>
+        <li>Google Cloud Vision API</li>
+      </ul>
+      <p><strong>1.4</strong> Create OAuth 2.0 Client ID (Web application)</p>
+      <p><strong>1.5</strong> Create an API key (restrict to Vision API)</p>
+    </div>
+
+    <h2>Step 2: Create Google Spreadsheet</h2>
+    <div class="step">
+      <p><strong>2.1</strong> Create a new spreadsheet named "Shopping List"</p>
+      <p><strong>2.2</strong> Create two sheets:</p>
+      <ul>
+        <li><strong>Shopping List</strong> - Headers: item, category, checked, addedBy, timestamp, order</li>
+        <li><strong>Categories</strong> - Headers: category, storeOrder, useCount</li>
+      </ul>
+      <p><strong>2.3</strong> Add default categories (Produce, Dairy, Meat, etc.)</p>
+      <p><strong>2.4</strong> Copy the Spreadsheet ID from the URL</p>
+    </div>
+
+    <h2>Step 3: Configure the App</h2>
+    <div class="step">
+      <p><strong>3.1</strong> Open <code>src/js/config.js</code></p>
+      <p><strong>3.2</strong> Replace these values:</p>
+      <ul>
+        <li><code>clientId</code> - Your OAuth 2.0 Client ID</li>
+        <li><code>apiKey</code> - Your Google API Key</li>
+        <li><code>spreadsheetId</code> - Your Spreadsheet ID</li>
+        <li><code>vision.apiKey</code> - Your Vision API Key</li>
+      </ul>
+    </div>
+
+    <h2>Step 4: Generate Icons</h2>
+    <div class="step">
+      <p>Use one of these methods:</p>
+      <ul>
+        <li><a href="https://www.pwabuilder.com/imageGenerator" target="_blank">PWA Builder Image Generator</a></li>
+        <li><a href="https://favicon.io/emoji-favicons/" target="_blank">Favicon.io Emoji Generator</a> (use 🛒)</li>
+      </ul>
+      <p>Save icons to <code>src/assets/icons/</code> directory</p>
+    </div>
+
+    <h2>Step 5: Test Locally</h2>
+    <div class="step">
+      <p>Run a local server:</p>
+      <p><code>python3 -m http.server 8000</code></p>
+      <p>Or: <code>npx serve</code></p>
+      <p>Open: <code>http://localhost:8000</code></p>
+    </div>
+
+    <h2>Step 6: Deploy</h2>
+    <div class="step">
+      <p>Choose a free hosting service:</p>
+      <ul>
+        <li><strong>GitHub Pages</strong> - Push to GitHub and enable Pages</li>
+        <li><strong>Netlify</strong> - Drag & drop or connect repo</li>
+        <li><strong>Vercel</strong> - Import from GitHub</li>
+      </ul>
+      <p>Don't forget to update your OAuth redirect URIs with the production URL!</p>
+    </div>
+
+    <div class="warning">
+      <strong>📖 Need more details?</strong> Check the complete <a href="README.md">README.md</a> for detailed
+      instructions, troubleshooting, and more.
+    </div>
+
+    <a href="index.html" class="button">Go to App</a>
+  </div>
+</body>
+
+</html>
