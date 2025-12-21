@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate PWA Icons</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #4CAF50;
+    }
+
+    .preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .icon-preview {
+      text-align: center;
+    }
+
+    .icon-preview canvas {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .icon-preview p {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 0.5rem;
+    }
+
+    button:hover {
+      background: #388E3C;
+    }
+
+    .success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      display: none;
+    }
+
+    .instructions {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🛒 Generate PWA Icons</h1>
+
+    <div class="instructions">
+      <strong>Instructions:</strong>
+      <ol>
+        <li>Click "Generate All Icons" below</li>
+        <li>Click each "Download" button to save the icons</li>
+        <li>Save each icon to: <code>src/assets/icons/</code></li>
+        <li>Use the exact filename shown (e.g., icon-72x72.png)</li>
+      </ol>
+    </div>
+
+    <button onclick="generateAllIcons()" style="font-size: 1.2rem; padding: 1.5rem 3rem;">
+      🎨 Generate All Icons
+    </button>
+
+    <div id="success" class="success">
+      ✅ Icons generated! Click the download buttons below to save them.
+    </div>
+
+    <div id="preview" class="preview"></div>
+
+    <div id="downloadAll" style="display: none; margin-top: 2rem;">
+      <button onclick="downloadAllIcons()" style="background: #FF9800;">
+        📥 Download All Icons (ZIP would need library)
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    const canvases = {};
+
+    function generateAllIcons() {
+      const preview = document.getElementById('preview');
+      preview.innerHTML = '';
+
+      sizes.forEach(size => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Draw background
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillRect(0, 0, size, size);
+
+        // Draw shopping cart emoji/icon
+        ctx.font = `${size * 0.6}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🛒', size / 2, size / 2);
+
+        // Store canvas
+        canvases[size] = canvas;
+
+        // Create preview
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'icon-preview';
+
+        const displayCanvas = canvas.cloneNode(true);
+        displayCanvas.style.width = '96px';
+        displayCanvas.style.height = '96px';
+
+        const label = document.createElement('p');
+        label.textContent = `${size}x${size}`;
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = 'Download';
+        downloadBtn.style.fontSize = '0.875rem';
+        downloadBtn.style.padding = '0.5rem 1rem';
+        downloadBtn.onclick = () => downloadIcon(size);
+
+        previewDiv.appendChild(displayCanvas);
+        previewDiv.appendChild(label);
+        previewDiv.appendChild(downloadBtn);
+        preview.appendChild(previewDiv);
+      });
+
+      document.getElementById('success').style.display = 'block';
+      document.getElementById('downloadAll').style.display = 'block';
+    }
+
+    function downloadIcon(size) {
+      const canvas = canvases[size];
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `icon-${size}x${size}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    }
+
+    function downloadAllIcons() {
+      sizes.forEach((size, index) => {
+        setTimeout(() => {
+          downloadIcon(size);
+        }, index * 500); // Stagger downloads
+      });
+    }
+  </script>
+</body>
+
+</html>
