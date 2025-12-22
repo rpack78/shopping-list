@@ -130,10 +130,12 @@ header h1 {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+  flex-wrap: nowrap;
 }
 
 .input-group input {
   flex: 1;
+  min-width: 0;
   padding: 0.75rem;
   border: 2px solid var(--border-color);
   border-radius: 8px;
@@ -591,15 +593,25 @@ header .icon-btn:hover {
   }
 
   .input-group {
-    flex-wrap: wrap;
+    gap: 0.25rem;
   }
 
   .input-group input {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
+    padding: 0.625rem;
+    font-size: 0.9375rem;
   }
 
-  .icon-btn {
-    flex: 1;
+  .input-group .icon-btn {
+    padding: 0.5rem;
+    min-width: 40px;
+    width: 40px;
+    flex-shrink: 0;
+  }
+
+  .input-group .icon-btn .icon {
+    font-size: 1rem;
   }
 }
 

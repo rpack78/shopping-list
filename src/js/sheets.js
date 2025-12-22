@@ -288,7 +288,7 @@ const SheetsAPI = {
   async findMostRecentCategory(itemName) {
     try {
       const clearedItems = await this.getClearedItems();
-      
+
       // Filter items that match (case-insensitive)
       const matchingItems = clearedItems.filter(
         (item) => item.item.toLowerCase() === itemName.toLowerCase()

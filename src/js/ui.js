@@ -172,8 +172,10 @@ const UI = {
     if (categorySelect.value && categorySelect.value !== "__new__") return;
 
     try {
-      const suggestedCategory = await SheetsAPI.findMostRecentCategory(itemName);
-      
+      const suggestedCategory = await SheetsAPI.findMostRecentCategory(
+        itemName
+      );
+
       if (suggestedCategory) {
         // Check if this category exists in the dropdown
         const options = Array.from(categorySelect.options);
@@ -184,7 +186,9 @@ const UI = {
         if (matchingOption) {
           categorySelect.value = suggestedCategory;
           this.updateAddButtonState();
-          console.log(`Auto-selected category "${suggestedCategory}" for item "${itemName}"`);
+          console.log(
+            `Auto-selected category "${suggestedCategory}" for item "${itemName}"`
+          );
         }
       }
     } catch (error) {
