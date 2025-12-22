@@ -7,6 +7,8 @@ const SheetsAPI = {
   AUTH_STORAGE_KEY: "shopping_list_auth",
   AUTH_EXPIRY_HOURS: 24,
   AUTH_VERSION: 2, // Increment this when scopes change to force re-auth
+  isRefreshingToken: false,
+  tokenRefreshPromise: null,
 
   // Initialize Google API
   async init() {
@@ -45,9 +47,15 @@ const SheetsAPI = {
               gapi.client.setToken({ access_token: response.access_token });
               this.isAuthenticated = true;
               this.saveAuthToStorage(response.access_token);
+              this.isRefreshingToken = false;
+              this.tokenRefreshPromise = null;
               if (window.onAuthSuccess) {
                 window.onAuthSuccess();
               }
+            } else if (response.error) {
+              console.error("Token refresh error:", response.error);
+              this.isRefreshingToken = false;
+              this.tokenRefreshPromise = null;
             }
           },
         });
@@ -134,6 +142,14 @@ const SheetsAPI = {
       );
 
       if (!response.ok) {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          console.log("getUserInfo got 401, refreshing token...");
+          await this.refreshToken();
+          // Retry after token refresh
+          return await this.getUserInfo();
+        }
+        
         console.error(
           "Failed to get user info:",
           response.status,
@@ -168,6 +184,94 @@ const SheetsAPI = {
     this.tokenClient.requestAccessToken({ prompt: "consent" });
   },
 
+  // Refresh the access token silently
+  async refreshToken() {
+    // If already refreshing, wait for that to complete
+    if (this.isRefreshingToken && this.tokenRefreshPromise) {
+      return this.tokenRefreshPromise;
+    }
+
+    this.isRefreshingToken = true;
+    this.tokenRefreshPromise = new Promise((resolve, reject) => {
+      if (!this.tokenClient) {
+        this.isRefreshingToken = false;
+        this.tokenRefreshPromise = null;
+        reject(new Error("Token client not initialized"));
+        return;
+      }
+
+      console.log("Refreshing access token...");
+      
+      // Store the original callback
+      const originalCallback = this.tokenClient.callback;
+      
+      // Set up a one-time callback for the refresh
+      this.tokenClient.callback = (response) => {
+        // Restore the original callback
+        this.tokenClient.callback = originalCallback;
+        
+        if (response.access_token) {
+          this.accessToken = response.access_token;
+          gapi.client.setToken({ access_token: response.access_token });
+          this.isAuthenticated = true;
+          this.saveAuthToStorage(response.access_token);
+          this.isRefreshingToken = false;
+          this.tokenRefreshPromise = null;
+          console.log("Token refreshed successfully");
+          resolve();
+        } else {
+          console.error("Failed to refresh token:", response.error);
+          this.isRefreshingToken = false;
+          this.tokenRefreshPromise = null;
+          reject(new Error(response.error || "Token refresh failed"));
+        }
+      };
+
+      // Request a new token silently (without prompt if possible)
+      try {
+        this.tokenClient.requestAccessToken({ prompt: "" });
+      } catch (error) {
+        console.error("Error requesting token refresh:", error);
+        this.tokenClient.callback = originalCallback;
+        this.isRefreshingToken = false;
+        this.tokenRefreshPromise = null;
+        reject(error);
+      }
+    });
+
+    return this.tokenRefreshPromise;
+  },
+
+  // Handle 401 errors by refreshing the token and retrying
+  async handleUnauthorized(retryFn) {
+    try {
+      console.log("Handling 401 error - attempting token refresh...");
+      await this.refreshToken();
+      
+      // Retry the original request
+      return await retryFn();
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+      
+      // If refresh fails, sign out and show auth screen
+      this.isAuthenticated = false;
+      this.clearAuthStorage();
+      
+      // Show auth section
+      const authSection = document.getElementById("authSection");
+      const mainApp = document.getElementById("mainApp");
+      if (authSection) authSection.classList.remove("hidden");
+      if (mainApp) mainApp.classList.add("hidden");
+      
+      if (window.UI) {
+        UI.showStatus("Session expired. Please sign in again.", "error");
+        UI.stopAutoSync();
+      }
+      
+      throw error;
+    }
+  },
+
   // Sign out
   signOut() {
     if (this.accessToken) {
@@ -190,6 +294,12 @@ const SheetsAPI = {
       return response.result.values || [];
     } catch (error) {
       console.error("Error reading from sheet:", error);
+      
+      // Handle 401 Unauthorized - token expired
+      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
+        return await this.handleUnauthorized(() => this.read(range));
+      }
+      
       throw error;
     }
   },
@@ -208,6 +318,12 @@ const SheetsAPI = {
       return response.result;
     } catch (error) {
       console.error("Error writing to sheet:", error);
+      
+      // Handle 401 Unauthorized - token expired
+      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
+        return await this.handleUnauthorized(() => this.write(range, values));
+      }
+      
       throw error;
     }
   },
@@ -227,6 +343,12 @@ const SheetsAPI = {
       return response.result;
     } catch (error) {
       console.error("Error appending to sheet:", error);
+      
+      // Handle 401 Unauthorized - token expired
+      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
+        return await this.handleUnauthorized(() => this.append(range, values));
+      }
+      
       throw error;
     }
   },
@@ -254,6 +376,12 @@ const SheetsAPI = {
       return response.result;
     } catch (error) {
       console.error("Error deleting row:", error);
+      
+      // Handle 401 Unauthorized - token expired
+      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
+        return await this.handleUnauthorized(() => this.deleteRow(sheetId, rowIndex));
+      }
+      
       throw error;
     }
   },
