@@ -124,6 +124,21 @@ const UI = {
       });
     }
 
+    // Edit modal
+    const closeEditModal = document.getElementById("closeEditModal");
+    if (closeEditModal) {
+      closeEditModal.addEventListener("click", () => {
+        this.closeEditModal();
+      });
+    }
+
+    const saveEditBtn = document.getElementById("saveEditBtn");
+    if (saveEditBtn) {
+      saveEditBtn.addEventListener("click", () => {
+        this.saveEditItem();
+      });
+    }
+
     // OCR modal
     const closeOcrModal = document.getElementById("closeOcrModal");
     if (closeOcrModal) {
@@ -345,6 +360,13 @@ const UI = {
                     </div>
                 </div>
                 <div class="item-actions">
+                    <button class="edit-btn" data-row="${
+                      item.rowIndex
+                    }" data-item="${this.escapeHtml(
+      item.item
+    )}" data-category="${this.escapeHtml(
+      item.category
+    )}" title="Edit">✏️</button>
                     <button class="delete-btn" data-row="${
                       item.rowIndex
                     }" title="Delete">🗑️</button>
@@ -361,6 +383,16 @@ const UI = {
         const rowIndex = parseInt(e.target.dataset.row);
         const checked = e.target.checked;
         await this.toggleItemChecked(rowIndex, checked);
+      });
+    });
+
+    // Edit buttons
+    document.querySelectorAll(".edit-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const rowIndex = parseInt(e.target.dataset.row);
+        const itemName = e.target.dataset.item;
+        const category = e.target.dataset.category;
+        this.openEditModal(rowIndex, itemName, category);
       });
     });
 
@@ -429,6 +461,93 @@ const UI = {
     } catch (error) {
       console.error("Error deleting item:", error);
       this.showStatus("Failed to delete item", "error");
+    }
+  },
+
+  // Open edit modal
+  openEditModal(rowIndex, itemName, category) {
+    const modal = document.getElementById("editModal");
+    const editItemInput = document.getElementById("editItemInput");
+    const editCategorySelect = document.getElementById("editCategorySelect");
+
+    if (!modal || !editItemInput || !editCategorySelect) return;
+
+    // Store the current row index
+    this.currentEditRowIndex = rowIndex;
+    this.currentEditOriginalCategory = category;
+
+    // Set current values
+    editItemInput.value = itemName;
+
+    // Populate category dropdown
+    const categories = Categories.getSortedCategories();
+    let html = "";
+    categories.forEach((cat) => {
+      const selected = cat.name === category ? "selected" : "";
+      html += `<option value="${this.escapeHtml(
+        cat.name
+      )}" ${selected}>${this.escapeHtml(cat.name)}</option>`;
+    });
+    editCategorySelect.innerHTML = html;
+
+    // Show modal
+    modal.classList.remove("hidden");
+    editItemInput.focus();
+  },
+
+  // Close edit modal
+  closeEditModal() {
+    const modal = document.getElementById("editModal");
+    if (modal) {
+      modal.classList.add("hidden");
+    }
+    this.currentEditRowIndex = null;
+    this.currentEditOriginalCategory = null;
+  },
+
+  // Save edited item
+  async saveEditItem() {
+    const editItemInput = document.getElementById("editItemInput");
+    const editCategorySelect = document.getElementById("editCategorySelect");
+
+    if (!editItemInput || !editCategorySelect) return;
+
+    const newItemName = editItemInput.value.trim();
+    const newCategory = editCategorySelect.value;
+
+    if (!newItemName || !newCategory) {
+      this.showStatus("Please enter item name and select category", "error");
+      return;
+    }
+
+    try {
+      this.showStatus("Saving changes...", "info");
+
+      const categoryChanged = newCategory !== this.currentEditOriginalCategory;
+
+      if (categoryChanged) {
+        // If category changed, delete old item and add new one with new category
+        // This ensures proper ordering and category grouping
+        await SheetsAPI.deleteItem(this.currentEditRowIndex);
+        await SheetsAPI.addItem(newItemName, newCategory);
+      } else {
+        // If category didn't change, just update the item name
+        await SheetsAPI.updateItem(
+          this.currentEditRowIndex,
+          newItemName,
+          newCategory
+        );
+      }
+
+      // Close modal and refresh
+      this.closeEditModal();
+      await this.refreshList();
+
+      this.showStatus("Item updated!", "success");
+      setTimeout(() => this.hideStatus(), 2000);
+    } catch (error) {
+      console.error("Error updating item:", error);
+      this.showStatus("Failed to update item", "error");
     }
   },
 

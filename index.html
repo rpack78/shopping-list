@@ -102,6 +102,29 @@
       </div>
     </div>
 
+    <!-- Edit Item Modal -->
+    <div id="editModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Edit Item</h2>
+          <button class="close-btn" id="closeEditModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="edit-form">
+            <label for="editItemInput">Item Name</label>
+            <input type="text" id="editItemInput" placeholder="Item name">
+
+            <label for="editCategorySelect">Category</label>
+            <select id="editCategorySelect">
+              <option value="">Select category...</option>
+            </select>
+
+            <button id="saveEditBtn" class="primary-btn">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Photo OCR Modal -->
     <div id="ocrModal" class="modal hidden">
       <div class="modal-content">
