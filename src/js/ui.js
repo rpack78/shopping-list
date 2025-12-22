@@ -27,9 +27,11 @@ const UI = {
     }
 
     if (itemInput) {
-      itemInput.addEventListener("keypress", (e) => {
+      itemInput.addEventListener("keypress", async (e) => {
         if (e.key === "Enter") {
-          this.addItem();
+          e.preventDefault();
+          await this.suggestCategoryFromHistory();
+          await this.addItem();
         }
       });
 
