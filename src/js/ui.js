@@ -86,6 +86,14 @@ const UI = {
       });
     }
 
+    // Logout button
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        App.signOut();
+      });
+    }
+
     // Clear checked items button
     const clearCheckedBtn = document.getElementById("clearCheckedBtn");
     if (clearCheckedBtn) {
