@@ -349,7 +349,11 @@ const UI = {
                     ${checkedAttr}
                     data-row="${item.rowIndex}"
                 />
-                <div class="item-content">
+                <div class="item-content" data-row="${
+                  item.rowIndex
+                }" data-item="${this.escapeHtml(
+      item.item
+    )}" data-category="${this.escapeHtml(item.category)}">
                     <div class="item-text">${this.escapeHtml(item.item)}</div>
                     <div class="item-meta">
                         ${
@@ -360,13 +364,6 @@ const UI = {
                     </div>
                 </div>
                 <div class="item-actions">
-                    <button class="edit-btn" data-row="${
-                      item.rowIndex
-                    }" data-item="${this.escapeHtml(
-      item.item
-    )}" data-category="${this.escapeHtml(
-      item.category
-    )}" title="Edit">✏️</button>
                     <button class="delete-btn" data-row="${
                       item.rowIndex
                     }" title="Delete">🗑️</button>
@@ -386,12 +383,12 @@ const UI = {
       });
     });
 
-    // Edit buttons
-    document.querySelectorAll(".edit-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        const rowIndex = parseInt(e.target.dataset.row);
-        const itemName = e.target.dataset.item;
-        const category = e.target.dataset.category;
+    // Item content click to edit
+    document.querySelectorAll(".item-content").forEach((content) => {
+      content.addEventListener("click", async (e) => {
+        const rowIndex = parseInt(e.currentTarget.dataset.row);
+        const itemName = e.currentTarget.dataset.item;
+        const category = e.currentTarget.dataset.category;
         this.openEditModal(rowIndex, itemName, category);
       });
     });
