@@ -2,7 +2,7 @@
   "name": "Shopping List",
   "short_name": "Shopping",
   "description": "Smart shopping list with voice input and cloud sync",
-  "start_url": "/",
+  "start_url": "/shopping-list",
   "display": "standalone",
   "background_color": "#F5F5F5",
   "theme_color": "#4CAF50",
