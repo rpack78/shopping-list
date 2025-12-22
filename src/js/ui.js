@@ -288,10 +288,19 @@ const UI = {
       grouped[item.category].push(item);
     });
 
-    // Render groups
+    // Sort category names by storeOrder
+    const sortedCategories = Object.keys(grouped).sort((a, b) => {
+      const categoryA = Categories.getCategory(a);
+      const categoryB = Categories.getCategory(b);
+      const orderA = categoryA?.storeOrder ?? 999;
+      const orderB = categoryB?.storeOrder ?? 999;
+      return orderA - orderB;
+    });
+
+    // Render groups in storeOrder
     let html = "";
-    for (const [category, items] of Object.entries(grouped)) {
-      html += this.renderCategoryGroup(category, items);
+    for (const category of sortedCategories) {
+      html += this.renderCategoryGroup(category, grouped[category]);
     }
 
     container.innerHTML = html;
