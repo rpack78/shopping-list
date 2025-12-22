@@ -654,6 +654,32 @@ header .icon-btn:hover {
   .input-group .icon-btn .icon {
     font-size: 1rem;
   }
+
+  /* Make item action buttons more visible and tappable on mobile */
+  .item-actions {
+    gap: 0.25rem;
+  }
+
+  .item-actions button {
+    font-size: 1.375rem;
+    padding: 0.5rem;
+    min-width: 44px;
+    min-height: 44px;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-actions button:active {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+  }
+
+  .list-item {
+    padding: 0.75rem 0.5rem;
+  }
 }
 
 /* iOS Safari specific fixes */
