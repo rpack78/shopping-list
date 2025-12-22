@@ -84,6 +84,27 @@ const Categories = {
     }
   },
 
+  // Update multiple category store orders in batch
+  async updateMultipleStoreOrders(updates) {
+    try {
+      // updates is an array of { name, order } objects
+      const updatePromises = updates.map(async ({ name, order }) => {
+        const category = this.categories.find((c) => c.name === name);
+        if (!category) return;
+
+        const range = `${CONFIG.sheets.categoriesSheet}!B${category.rowIndex}`;
+        await SheetsAPI.write(range, [[order]]);
+        category.storeOrder = order;
+      });
+
+      await Promise.all(updatePromises);
+      await this.loadCategories();
+    } catch (error) {
+      console.error("Error updating multiple store orders:", error);
+      throw error;
+    }
+  },
+
   // Delete category
   async deleteCategory(categoryName) {
     const category = this.categories.find((c) => c.name === categoryName);

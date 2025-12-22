@@ -643,12 +643,18 @@ const UI = {
     const categoryList = document.getElementById("categoryList");
     if (!categoryList) return;
 
-    const categories = Categories.categories.filter((c) => c.name);
+    // Sort categories by storeOrder (ascending)
+    const categories = Categories.categories
+      .filter((c) => c.name)
+      .sort((a, b) => a.storeOrder - b.storeOrder);
 
     const html = categories
       .map(
         (category) => `
-            <div class="category-item">
+            <div class="category-item" draggable="true" data-category-name="${this.escapeHtml(
+              category.name
+            )}">
+                <div class="drag-handle">⋮⋮</div>
                 <div class="category-info">
                     <div class="category-name">${this.escapeHtml(
                       category.name
@@ -665,6 +671,101 @@ const UI = {
       .join("");
 
     categoryList.innerHTML = html;
+    
+    // Attach drag event listeners
+    this.attachDragListeners();
+  },
+
+  // Attach drag and drop event listeners for category reordering
+  attachDragListeners() {
+    const categoryItems = document.querySelectorAll(".category-item");
+    let draggedElement = null;
+
+    categoryItems.forEach((item) => {
+      item.addEventListener("dragstart", (e) => {
+        draggedElement = e.currentTarget;
+        e.currentTarget.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      item.addEventListener("dragend", (e) => {
+        e.currentTarget.classList.remove("dragging");
+        document.querySelectorAll(".category-item").forEach((el) => {
+          el.classList.remove("drag-over");
+        });
+      });
+
+      item.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+
+        const afterElement = this.getDragAfterElement(
+          e.currentTarget.parentElement,
+          e.clientY
+        );
+        if (afterElement == null) {
+          e.currentTarget.parentElement.appendChild(draggedElement);
+        } else {
+          e.currentTarget.parentElement.insertBefore(
+            draggedElement,
+            afterElement
+          );
+        }
+      });
+
+      item.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        await this.updateCategoryOrder();
+      });
+    });
+  },
+
+  // Get the element to insert the dragged element after
+  getDragAfterElement(container, y) {
+    const draggableElements = [
+      ...container.querySelectorAll(".category-item:not(.dragging)"),
+    ];
+
+    return draggableElements.reduce(
+      (closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      },
+      { offset: Number.NEGATIVE_INFINITY }
+    ).element;
+  },
+
+  // Update category order after drag and drop
+  async updateCategoryOrder() {
+    const categoryList = document.getElementById("categoryList");
+    if (!categoryList) return;
+
+    const categoryItems = categoryList.querySelectorAll(".category-item");
+    const updates = [];
+
+    // Collect updates for all categories
+    categoryItems.forEach((item, index) => {
+      const categoryName = item.dataset.categoryName;
+      const newOrder = (index + 1) * 10; // Use multiples of 10 for easier reordering
+      updates.push({ name: categoryName, order: newOrder });
+    });
+
+    try {
+      await Categories.updateMultipleStoreOrders(updates);
+      this.renderCategoryList();
+      this.showStatus("Category order updated!", "success");
+      setTimeout(() => this.hideStatus(), 2000);
+    } catch (error) {
+      console.error("Error updating category order:", error);
+      this.showStatus("Failed to update order", "error");
+      setTimeout(() => this.hideStatus(), 2000);
+    }
   },
 
   // Add new category from modal
