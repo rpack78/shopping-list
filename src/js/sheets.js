@@ -3,7 +3,7 @@ const SheetsAPI = {
   isAuthenticated: false,
   tokenClient: null,
   accessToken: null,
-  AUTH_STORAGE_KEY: 'shopping_list_auth',
+  AUTH_STORAGE_KEY: "shopping_list_auth",
   AUTH_EXPIRY_HOURS: 24,
 
   // Initialize Google API
@@ -49,7 +49,7 @@ const SheetsAPI = {
             }
           },
         });
-        
+
         // Try to restore authentication from storage
         this.restoreAuthFromStorage();
       };
@@ -61,7 +61,7 @@ const SheetsAPI = {
   saveAuthToStorage(accessToken) {
     const authData = {
       accessToken: accessToken,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     localStorage.setItem(this.AUTH_STORAGE_KEY, JSON.stringify(authData));
   },
@@ -81,8 +81,8 @@ const SheetsAPI = {
         this.accessToken = authData.accessToken;
         gapi.client.setToken({ access_token: authData.accessToken });
         this.isAuthenticated = true;
-        console.log('Restored authentication from storage');
-        
+        console.log("Restored authentication from storage");
+
         // Trigger auth success callback
         if (window.onAuthSuccess) {
           window.onAuthSuccess();
@@ -90,12 +90,12 @@ const SheetsAPI = {
         return true;
       } else {
         // Token expired, clear storage
-        console.log('Stored token expired, clearing...');
+        console.log("Stored token expired, clearing...");
         this.clearAuthStorage();
         return false;
       }
     } catch (error) {
-      console.error('Error restoring auth from storage:', error);
+      console.error("Error restoring auth from storage:", error);
       this.clearAuthStorage();
       return false;
     }

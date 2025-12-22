@@ -86,6 +86,14 @@ const UI = {
       });
     }
 
+    // Clear checked items button
+    const clearCheckedBtn = document.getElementById("clearCheckedBtn");
+    if (clearCheckedBtn) {
+      clearCheckedBtn.addEventListener("click", () => {
+        this.clearCheckedItems();
+      });
+    }
+
     // Category modal
     const closeCategoryModal = document.getElementById("closeCategoryModal");
     if (closeCategoryModal) {
@@ -207,6 +215,16 @@ const UI = {
 
     emptyState.classList.add("hidden");
 
+    // Show/hide clear checked button
+    const clearCheckedBtn = document.getElementById("clearCheckedBtn");
+    if (clearCheckedBtn) {
+      if (checkedItems.length > 0) {
+        clearCheckedBtn.classList.remove("hidden");
+      } else {
+        clearCheckedBtn.classList.add("hidden");
+      }
+    }
+
     // Group items by category
     const grouped = {};
 
@@ -291,6 +309,38 @@ const UI = {
         await this.deleteItem(rowIndex);
       });
     });
+  },
+
+  // Clear all checked items
+  async clearCheckedItems() {
+    const checkedCount = this.shoppingList.filter(
+      (item) => item.checked
+    ).length;
+
+    if (checkedCount === 0) {
+      this.showStatus("No checked items to clear", "info");
+      setTimeout(() => this.hideStatus(), 2000);
+      return;
+    }
+
+    if (
+      !confirm(
+        `Clear ${checkedCount} checked item${checkedCount > 1 ? "s" : ""}?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      this.showStatus("Clearing checked items...", "info");
+      await SheetsAPI.clearCheckedItems();
+      await this.refreshList();
+      this.showStatus("Checked items cleared!", "success");
+      setTimeout(() => this.hideStatus(), 2000);
+    } catch (error) {
+      console.error("Error clearing checked items:", error);
+      this.showStatus("Failed to clear checked items", "error");
+    }
   },
 
   // Toggle item checked
