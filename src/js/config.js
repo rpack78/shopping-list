@@ -30,6 +30,7 @@ const CONFIG = {
     // Sheet names
     shoppingListSheet: "Shopping List",
     categoriesSheet: "Categories",
+    clearedItemsSheet: "Cleared Items",
   },
 
   // Google Vision API Configuration

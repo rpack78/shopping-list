@@ -320,12 +320,30 @@ const SheetsAPI = {
     await this.write(range, values);
   },
 
-  // Clear all checked items
+  // Clear all checked items (move to Cleared Items sheet)
   async clearCheckedItems() {
     const items = await this.getShoppingList();
     const checkedItems = items.filter((item) => item.checked);
 
-    for (const item of checkedItems) {
+    if (checkedItems.length === 0) {
+      return;
+    }
+
+    // Prepare data for Cleared Items sheet
+    // Columns: item, category, addedBy, timestamp
+    const clearedItemsData = checkedItems.map((item) => [
+      item.item,
+      item.category,
+      item.addedBy,
+      new Date().toISOString(), // Current timestamp for when it was cleared
+    ]);
+
+    // Append to Cleared Items sheet
+    const range = `${CONFIG.sheets.clearedItemsSheet}!A:D`;
+    await this.append(range, clearedItemsData);
+
+    // Delete items from Shopping List (in reverse order to maintain indices)
+    for (const item of checkedItems.reverse()) {
       await this.deleteItem(item.rowIndex);
     }
   },
@@ -336,6 +354,7 @@ const SheetsAPI = {
       // Check if headers exist
       const shoppingListRange = `${CONFIG.sheets.shoppingListSheet}!A1:F1`;
       const categoriesRange = `${CONFIG.sheets.categoriesSheet}!A1:C1`;
+      const clearedItemsRange = `${CONFIG.sheets.clearedItemsSheet}!A1:D1`;
 
       const shoppingHeaders = await this.read(shoppingListRange);
       if (!shoppingHeaders.length) {
@@ -367,6 +386,13 @@ const SheetsAPI = {
           `${CONFIG.sheets.categoriesSheet}!A:C`,
           defaultCategories
         );
+      }
+
+      const clearedHeaders = await this.read(clearedItemsRange);
+      if (!clearedHeaders.length) {
+        await this.write(clearedItemsRange, [
+          ["item", "category", "addedBy", "timestamp"],
+        ]);
       }
     } catch (error) {
       console.error("Error initializing sheets:", error);
