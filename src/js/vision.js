@@ -34,7 +34,41 @@ const Vision = {
       );
 
       if (!response.ok) {
-        throw new Error(`Vision API error: ${response.status}`);
+        // Get detailed error message
+        let errorMessage = 'Vision API error';
+        
+        switch (response.status) {
+          case 400:
+            errorMessage = 'Invalid request to Vision API. Please try a different image.';
+            break;
+          case 401:
+            errorMessage = 'Vision API key is invalid. Please check your API configuration.';
+            break;
+          case 403:
+            errorMessage = 'Vision API access denied. Please ensure:\n1. Cloud Vision API is enabled in Google Cloud Console\n2. API key has proper permissions\n3. Billing is enabled (required for Vision API)\n4. Domain restrictions allow your website';
+            break;
+          case 429:
+            errorMessage = 'Vision API quota exceeded. Please try again later.';
+            break;
+          case 500:
+          case 503:
+            errorMessage = 'Vision API is temporarily unavailable. Please try again in a moment.';
+            break;
+          default:
+            errorMessage = `Vision API error: ${response.status}`;
+        }
+        
+        // Try to get more details from response
+        try {
+          const errorData = await response.json();
+          if (errorData.error && errorData.error.message) {
+            errorMessage += `\n\nDetails: ${errorData.error.message}`;
+          }
+        } catch (e) {
+          // Ignore JSON parse errors
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

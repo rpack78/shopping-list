@@ -863,7 +863,15 @@ const UI = {
       this.renderOCRResults(items);
     } catch (error) {
       console.error("Error processing photo:", error);
-      alert("Error processing photo: " + error.message);
+      
+      // Show user-friendly error message
+      const errorTitle = "Unable to Process Image";
+      const errorMessage = error.message || "An unknown error occurred";
+      
+      // Use a more informative dialog if possible
+      if (confirm(`${errorTitle}\n\n${errorMessage}\n\nWould you like to see the configuration guide?`)) {
+        window.open('https://console.cloud.google.com/apis/library/vision.googleapis.com', '_blank');
+      }
 
       const loading = document.getElementById("ocrLoading");
       if (loading) loading.classList.add("hidden");
