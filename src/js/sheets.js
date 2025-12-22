@@ -271,6 +271,48 @@ const SheetsAPI = {
     }));
   },
 
+  // Get all cleared items
+  async getClearedItems() {
+    const range = `${CONFIG.sheets.clearedItemsSheet}!A2:D`;
+    const rows = await this.read(range);
+
+    return rows.map((row) => ({
+      item: row[0] || "",
+      category: row[1] || "",
+      addedBy: row[2] || "",
+      timestamp: row[3] || "",
+    }));
+  },
+
+  // Find most recent category for an item from cleared items
+  async findMostRecentCategory(itemName) {
+    try {
+      const clearedItems = await this.getClearedItems();
+      
+      // Filter items that match (case-insensitive)
+      const matchingItems = clearedItems.filter(
+        (item) => item.item.toLowerCase() === itemName.toLowerCase()
+      );
+
+      if (matchingItems.length === 0) {
+        return null;
+      }
+
+      // Sort by timestamp (most recent first)
+      matchingItems.sort((a, b) => {
+        const dateA = new Date(a.timestamp);
+        const dateB = new Date(b.timestamp);
+        return dateB - dateA;
+      });
+
+      // Return the category of the most recent item
+      return matchingItems[0].category;
+    } catch (error) {
+      console.error("Error finding recent category:", error);
+      return null;
+    }
+  },
+
   // Add new item
   async addItem(item, category, addedBy = null) {
     // Get user info if not provided

@@ -36,6 +36,11 @@ const UI = {
       itemInput.addEventListener("input", () => {
         this.updateAddButtonState();
       });
+
+      // Auto-suggest category based on cleared items history
+      itemInput.addEventListener("blur", async () => {
+        await this.suggestCategoryFromHistory();
+      });
     }
 
     if (categorySelect) {
@@ -150,6 +155,40 @@ const UI = {
       const hasCategory =
         categorySelect.value && categorySelect.value !== "__new__";
       addItemBtn.disabled = !(hasItem && hasCategory);
+    }
+  },
+
+  // Suggest category based on cleared items history
+  async suggestCategoryFromHistory() {
+    const itemInput = document.getElementById("itemInput");
+    const categorySelect = document.getElementById("categorySelect");
+
+    if (!itemInput || !categorySelect) return;
+
+    const itemName = itemInput.value.trim();
+    if (!itemName) return;
+
+    // Don't override if user already selected a category
+    if (categorySelect.value && categorySelect.value !== "__new__") return;
+
+    try {
+      const suggestedCategory = await SheetsAPI.findMostRecentCategory(itemName);
+      
+      if (suggestedCategory) {
+        // Check if this category exists in the dropdown
+        const options = Array.from(categorySelect.options);
+        const matchingOption = options.find(
+          (opt) => opt.value === suggestedCategory
+        );
+
+        if (matchingOption) {
+          categorySelect.value = suggestedCategory;
+          this.updateAddButtonState();
+          console.log(`Auto-selected category "${suggestedCategory}" for item "${itemName}"`);
+        }
+      }
+    } catch (error) {
+      console.error("Error suggesting category:", error);
     }
   },
 
