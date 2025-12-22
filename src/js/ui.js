@@ -822,6 +822,10 @@ const UI = {
       if (preview) preview.classList.add("hidden");
       if (loading) loading.classList.add("hidden");
       if (results) results.classList.add("hidden");
+
+      // Reset file input to allow selecting the same file again
+      const photoInput = document.getElementById("photoInput");
+      if (photoInput) photoInput.value = "";
     }
   },
 
