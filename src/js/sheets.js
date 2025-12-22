@@ -3,6 +3,8 @@ const SheetsAPI = {
   isAuthenticated: false,
   tokenClient: null,
   accessToken: null,
+  AUTH_STORAGE_KEY: 'shopping_list_auth',
+  AUTH_EXPIRY_HOURS: 24,
 
   // Initialize Google API
   async init() {
@@ -40,15 +42,68 @@ const SheetsAPI = {
               this.accessToken = response.access_token;
               gapi.client.setToken({ access_token: response.access_token });
               this.isAuthenticated = true;
+              this.saveAuthToStorage(response.access_token);
               if (window.onAuthSuccess) {
                 window.onAuthSuccess();
               }
             }
           },
         });
+        
+        // Try to restore authentication from storage
+        this.restoreAuthFromStorage();
       };
       document.head.appendChild(gsiScript);
     });
+  },
+
+  // Save authentication to localStorage
+  saveAuthToStorage(accessToken) {
+    const authData = {
+      accessToken: accessToken,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(this.AUTH_STORAGE_KEY, JSON.stringify(authData));
+  },
+
+  // Restore authentication from localStorage
+  restoreAuthFromStorage() {
+    try {
+      const stored = localStorage.getItem(this.AUTH_STORAGE_KEY);
+      if (!stored) return false;
+
+      const authData = JSON.parse(stored);
+      const age = Date.now() - authData.timestamp;
+      const maxAge = this.AUTH_EXPIRY_HOURS * 60 * 60 * 1000; // Convert hours to milliseconds
+
+      // Check if token is still valid (less than 24 hours old)
+      if (age < maxAge && authData.accessToken) {
+        this.accessToken = authData.accessToken;
+        gapi.client.setToken({ access_token: authData.accessToken });
+        this.isAuthenticated = true;
+        console.log('Restored authentication from storage');
+        
+        // Trigger auth success callback
+        if (window.onAuthSuccess) {
+          window.onAuthSuccess();
+        }
+        return true;
+      } else {
+        // Token expired, clear storage
+        console.log('Stored token expired, clearing...');
+        this.clearAuthStorage();
+        return false;
+      }
+    } catch (error) {
+      console.error('Error restoring auth from storage:', error);
+      this.clearAuthStorage();
+      return false;
+    }
+  },
+
+  // Clear authentication from localStorage
+  clearAuthStorage() {
+    localStorage.removeItem(this.AUTH_STORAGE_KEY);
   },
 
   // Request authentication
@@ -69,6 +124,7 @@ const SheetsAPI = {
     }
     this.isAuthenticated = false;
     gapi.client.setToken(null);
+    this.clearAuthStorage();
   },
 
   // Read from spreadsheet

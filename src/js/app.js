@@ -20,8 +20,9 @@ const App = {
       await SheetsAPI.init();
       console.log("Google API initialized");
 
-      // Check if already authenticated
+      // Check if already authenticated (will auto-restore from storage if valid)
       if (SheetsAPI.isAuthenticated) {
+        console.log("User already authenticated, restoring session...");
         await this.onAuthSuccess();
       }
     } catch (error) {
