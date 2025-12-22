@@ -246,13 +246,16 @@ const UI = {
   },
 
   // Refresh shopping list
-  async refreshList() {
+  async refreshList(silent = false) {
     try {
       this.shoppingList = await SheetsAPI.getShoppingList();
       this.renderList();
     } catch (error) {
       console.error("Error refreshing list:", error);
-      this.showStatus("Failed to refresh list", "error");
+      // Only show error message if not a silent background refresh
+      if (!silent) {
+        this.showStatus("Failed to refresh list", "error");
+      }
     }
   },
 
@@ -999,7 +1002,7 @@ const UI = {
     }
 
     this.syncInterval = setInterval(() => {
-      this.refreshList();
+      this.refreshList(true); // Silent refresh during auto-sync
     }, CONFIG.app.syncInterval);
   },
 
