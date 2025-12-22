@@ -66,7 +66,7 @@ A Progressive Web App that replaces Alexa shopping lists with voice input, OCR s
 
 1. Go to [Google Sheets](https://sheets.google.com)
 2. Create a new spreadsheet named "Shopping List"
-3. Create two sheets:
+3. Create three sheets:
 
 #### Sheet 1: "Shopping List"
 
@@ -97,6 +97,16 @@ Beverages   | 7 | 0
 Snacks      | 8 | 0
 Other       | 9 | 0
 ```
+
+#### Sheet 3: "Cleared Items"
+
+Add headers in row 1:
+
+```
+item | category | addedBy | timestamp
+```
+
+This sheet tracks purchased/cleared items and enables the app to auto-suggest categories based on your shopping history.
 
 4. Copy the **Spreadsheet ID** from the URL:
 
