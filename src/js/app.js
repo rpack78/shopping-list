@@ -63,6 +63,9 @@ const App = {
       if (authSection) authSection.classList.add("hidden");
       if (mainApp) mainApp.classList.remove("hidden");
 
+      // Get user info
+      await SheetsAPI.getUserInfo();
+
       // Initialize sheets if needed
       await SheetsAPI.initializeSheets();
 

@@ -3,6 +3,7 @@ const SheetsAPI = {
   isAuthenticated: false,
   tokenClient: null,
   accessToken: null,
+  userInfo: null,
   AUTH_STORAGE_KEY: "shopping_list_auth",
   AUTH_EXPIRY_HOURS: 24,
 
@@ -106,6 +107,29 @@ const SheetsAPI = {
     localStorage.removeItem(this.AUTH_STORAGE_KEY);
   },
 
+  // Get user info
+  async getUserInfo() {
+    try {
+      const response = await fetch(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+        }
+      );
+      const data = await response.json();
+      this.userInfo = {
+        email: data.email,
+        name: data.name || data.email,
+      };
+      return this.userInfo;
+    } catch (error) {
+      console.error("Error getting user info:", error);
+      return null;
+    }
+  },
+
   // Request authentication
   async authenticate() {
     if (!this.tokenClient) {
@@ -123,6 +147,7 @@ const SheetsAPI = {
       this.accessToken = null;
     }
     this.isAuthenticated = false;
+    this.userInfo = null;
     gapi.client.setToken(null);
     this.clearAuthStorage();
   },
@@ -222,7 +247,15 @@ const SheetsAPI = {
   },
 
   // Add new item
-  async addItem(item, category, addedBy = "User") {
+  async addItem(item, category, addedBy = null) {
+    // Get user info if not provided
+    if (!addedBy) {
+      if (!this.userInfo) {
+        await this.getUserInfo();
+      }
+      addedBy = this.userInfo ? this.userInfo.name : "User";
+    }
+
     const timestamp = new Date().toISOString();
     const order = Date.now(); // Use timestamp as order for new items
 

@@ -11,7 +11,11 @@ const CONFIG = {
     apiKey: "AIzaSyACbRnIlrpkwYvK76HTFBrYI0dGviuS_nI", // Can use same key as Vision API
 
     // Scopes needed for the app
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    scopes: [
+      "https://www.googleapis.com/auth/spreadsheets",
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ],
 
     // Discovery docs
     discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
