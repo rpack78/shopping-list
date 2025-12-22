@@ -90,7 +90,10 @@ const SheetsAPI = {
       // Check if token is still valid (less than 24 hours old)
       if (age < maxAge && authData.accessToken) {
         this.accessToken = authData.accessToken;
-        gapi.client.setToken({ access_token: authData.accessToken });
+        // Only set token if gapi.client is initialized
+        if (window.gapi && window.gapi.client && window.gapi.client.setToken) {
+          gapi.client.setToken({ access_token: authData.accessToken });
+        }
         this.isAuthenticated = true;
         console.log("Restored authentication from storage");
 
