@@ -860,7 +860,7 @@ const UI = {
       if (loading) loading.classList.add("hidden");
 
       // Show results
-      this.renderOCRResults(items);
+      await this.renderOCRResults(items);
     } catch (error) {
       console.error("Error processing photo:", error);
       
@@ -879,7 +879,7 @@ const UI = {
   },
 
   // Render OCR results
-  renderOCRResults(items) {
+  async renderOCRResults(items) {
     const results = document.getElementById("ocrResults");
     if (!results) return;
 
@@ -888,6 +888,19 @@ const UI = {
       results.classList.remove("hidden");
       return;
     }
+
+    // Look up categories for all items from Cleared Items history
+    const itemCategories = await Promise.all(
+      items.map(async (item) => {
+        try {
+          const category = await SheetsAPI.findMostRecentCategory(item);
+          return category;
+        } catch (error) {
+          console.error(`Error finding category for "${item}":`, error);
+          return null;
+        }
+      })
+    );
 
     const html = `
             <h3>Found ${items.length} items:</h3>
@@ -907,7 +920,11 @@ const UI = {
                                 (cat) =>
                                   `<option value="${this.escapeHtml(
                                     cat.name
-                                  )}">${this.escapeHtml(cat.name)}</option>`
+                                  )}" ${
+                                    itemCategories[index] === cat.name
+                                      ? "selected"
+                                      : ""
+                                  }>${this.escapeHtml(cat.name)}</option>`
                               )
                               .join("")}
                         </select>
