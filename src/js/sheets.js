@@ -6,6 +6,7 @@ const SheetsAPI = {
   userInfo: null,
   AUTH_STORAGE_KEY: "shopping_list_auth",
   AUTH_EXPIRY_HOURS: 24,
+  AUTH_VERSION: 2, // Increment this when scopes change to force re-auth
 
   // Initialize Google API
   async init() {
@@ -63,6 +64,7 @@ const SheetsAPI = {
     const authData = {
       accessToken: accessToken,
       timestamp: Date.now(),
+      version: this.AUTH_VERSION,
     };
     localStorage.setItem(this.AUTH_STORAGE_KEY, JSON.stringify(authData));
   },
@@ -74,6 +76,14 @@ const SheetsAPI = {
       if (!stored) return false;
 
       const authData = JSON.parse(stored);
+
+      // Check if auth version matches (clear if scopes changed)
+      if (authData.version !== this.AUTH_VERSION) {
+        console.log("Auth version mismatch, clearing old auth...");
+        this.clearAuthStorage();
+        return false;
+      }
+
       const age = Date.now() - authData.timestamp;
       const maxAge = this.AUTH_EXPIRY_HOURS * 60 * 60 * 1000; // Convert hours to milliseconds
 
@@ -110,6 +120,7 @@ const SheetsAPI = {
   // Get user info
   async getUserInfo() {
     try {
+      console.log("Fetching user info...");
       const response = await fetch(
         "https://www.googleapis.com/oauth2/v2/userinfo",
         {
@@ -118,11 +129,25 @@ const SheetsAPI = {
           },
         }
       );
+
+      if (!response.ok) {
+        console.error(
+          "Failed to get user info:",
+          response.status,
+          response.statusText
+        );
+        return null;
+      }
+
       const data = await response.json();
+      console.log("User info retrieved:", data);
+
       this.userInfo = {
         email: data.email,
         name: data.name || data.email,
       };
+
+      console.log("User info stored:", this.userInfo);
       return this.userInfo;
     } catch (error) {
       console.error("Error getting user info:", error);
@@ -250,10 +275,13 @@ const SheetsAPI = {
   async addItem(item, category, addedBy = null) {
     // Get user info if not provided
     if (!addedBy) {
+      console.log("No addedBy provided, checking userInfo:", this.userInfo);
       if (!this.userInfo) {
+        console.log("User info not cached, fetching...");
         await this.getUserInfo();
       }
       addedBy = this.userInfo ? this.userInfo.name : "User";
+      console.log("Using addedBy:", addedBy);
     }
 
     const timestamp = new Date().toISOString();
