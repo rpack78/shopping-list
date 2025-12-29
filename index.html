@@ -139,11 +139,19 @@
           <button class="close-btn" id="closeOcrModal">×</button>
         </div>
         <div class="modal-body">
-          <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+          <input type="file" id="photoInput" accept="image/*" class="hidden">
           <div id="ocrPreview" class="ocr-preview hidden">
             <img id="previewImage" alt="Captured image">
           </div>
-          <button id="selectPhotoBtn" class="primary-btn">Select Photo</button>
+          <div class="photo-actions" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 1rem;">
+            <button id="takePhotoBtn" class="primary-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span class="icon">📷</span> Take Photo
+            </button>
+            <button id="uploadPhotoBtn" class="primary-btn" style="flex: 1; background-color: var(--secondary-color); display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span class="icon">🖼️</span> Gallery
+            </button>
+          </div>
           <div id="ocrLoading" class="hidden">
             <div class="spinner"></div>
             <p>Processing image...</p>

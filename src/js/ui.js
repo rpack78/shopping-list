@@ -147,11 +147,23 @@ const UI = {
       });
     }
 
-    const selectPhotoBtn = document.getElementById("selectPhotoBtn");
+    const takePhotoBtn = document.getElementById("takePhotoBtn");
+    const uploadPhotoBtn = document.getElementById("uploadPhotoBtn");
+    const cameraInput = document.getElementById("cameraInput");
     const photoInput = document.getElementById("photoInput");
 
-    if (selectPhotoBtn && photoInput) {
-      selectPhotoBtn.addEventListener("click", () => {
+    if (takePhotoBtn && cameraInput) {
+      takePhotoBtn.addEventListener("click", () => {
+        cameraInput.click();
+      });
+
+      cameraInput.addEventListener("change", (e) => {
+        this.handlePhotoSelect(e);
+      });
+    }
+
+    if (uploadPhotoBtn && photoInput) {
+      uploadPhotoBtn.addEventListener("click", () => {
         photoInput.click();
       });
 
@@ -834,6 +846,9 @@ const UI = {
       // Reset file input to allow selecting the same file again
       const photoInput = document.getElementById("photoInput");
       if (photoInput) photoInput.value = "";
+      
+      const cameraInput = document.getElementById("cameraInput");
+      if (cameraInput) cameraInput.value = "";
     }
   },
 
