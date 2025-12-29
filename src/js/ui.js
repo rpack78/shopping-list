@@ -490,6 +490,11 @@ const UI = {
     });
     editCategorySelect.innerHTML = html;
 
+    // Explicitly set value to ensure it's selected
+    if (category) {
+      editCategorySelect.value = category;
+    }
+
     // Show modal
     modal.classList.remove("hidden");
     editItemInput.focus();
@@ -1016,8 +1021,11 @@ const UI = {
 
   // Escape HTML
   escapeHtml(text) {
+    if (!text && text !== 0) return "";
     const div = document.createElement("div");
     div.textContent = text;
-    return div.innerHTML;
+    return div.innerHTML
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   },
 };
