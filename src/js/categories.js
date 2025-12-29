@@ -5,7 +5,7 @@ const Categories = {
   // Load categories from Google Sheets
   async loadCategories() {
     try {
-      const range = `${CONFIG.sheets.categoriesSheet}!A2:C`;
+      const range = `'${CONFIG.sheets.categoriesSheet}'!A2:C`;
       const rows = await SheetsAPI.read(range);
 
       this.categories = rows.map((row, index) => ({
@@ -38,7 +38,7 @@ const Categories = {
   async addCategory(name, storeOrder = 999) {
     try {
       const values = [[name, storeOrder, 0]];
-      const range = `${CONFIG.sheets.categoriesSheet}!A:C`;
+      const range = `'${CONFIG.sheets.categoriesSheet}'!A:A`;
       await SheetsAPI.append(range, values);
 
       // Reload categories
@@ -56,7 +56,7 @@ const Categories = {
 
     try {
       const newCount = category.useCount + 1;
-      const range = `${CONFIG.sheets.categoriesSheet}!C${category.rowIndex}`;
+      const range = `'${CONFIG.sheets.categoriesSheet}'!C${category.rowIndex}`;
       await SheetsAPI.write(range, [[newCount]]);
 
       // Update local cache
@@ -73,7 +73,7 @@ const Categories = {
     if (!category) return;
 
     try {
-      const range = `${CONFIG.sheets.categoriesSheet}!B${category.rowIndex}`;
+      const range = `'${CONFIG.sheets.categoriesSheet}'!B${category.rowIndex}`;
       await SheetsAPI.write(range, [[newOrder]]);
 
       category.storeOrder = newOrder;
@@ -92,7 +92,7 @@ const Categories = {
         const category = this.categories.find((c) => c.name === name);
         if (!category) return;
 
-        const range = `${CONFIG.sheets.categoriesSheet}!B${category.rowIndex}`;
+        const range = `'${CONFIG.sheets.categoriesSheet}'!B${category.rowIndex}`;
         await SheetsAPI.write(range, [[order]]);
         category.storeOrder = order;
       });
@@ -111,7 +111,7 @@ const Categories = {
     if (!category) return;
 
     try {
-      const range = `${CONFIG.sheets.categoriesSheet}!A${category.rowIndex}:C${category.rowIndex}`;
+      const range = `'${CONFIG.sheets.categoriesSheet}'!A${category.rowIndex}:C${category.rowIndex}`;
       await SheetsAPI.write(range, [["", "", ""]]);
       await this.loadCategories();
     } catch (error) {

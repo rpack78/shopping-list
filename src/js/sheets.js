@@ -399,7 +399,7 @@ const SheetsAPI = {
 
   // Get all shopping list items
   async getShoppingList() {
-    const range = `${CONFIG.sheets.shoppingListSheet}!A2:F`;
+    const range = `'${CONFIG.sheets.shoppingListSheet}'!A2:F`;
     const rows = await this.read(range);
 
     return rows.map((row, index) => ({
@@ -415,7 +415,7 @@ const SheetsAPI = {
 
   // Get all cleared items
   async getClearedItems() {
-    const range = `${CONFIG.sheets.clearedItemsSheet}!A2:D`;
+    const range = `'${CONFIG.sheets.clearedItemsSheet}'!A2:D`;
     const rows = await this.read(range);
 
     return rows.map((row) => ({
@@ -473,7 +473,10 @@ const SheetsAPI = {
 
     const values = [[item, category, false, addedBy, timestamp, order]];
 
-    const range = `${CONFIG.sheets.shoppingListSheet}!A:F`;
+    // Use A:A to ensure we append to the first column, preventing issues where
+    // data might be appended to column G if the sheet thinks A-F are full.
+    // Also quote the sheet name to handle spaces correctly.
+    const range = `'${CONFIG.sheets.shoppingListSheet}'!A:A`;
     await this.append(range, values);
 
     // Increment category use count
@@ -483,14 +486,14 @@ const SheetsAPI = {
   // Update item checked status
   async updateItemChecked(rowIndex, checked) {
     const order = checked ? Date.now() + 999999999999 : Date.now(); // Checked items go to bottom
-    const range = `${CONFIG.sheets.shoppingListSheet}!C${rowIndex}:F${rowIndex}`;
+    const range = `'${CONFIG.sheets.shoppingListSheet}'!C${rowIndex}:F${rowIndex}`;
     const values = [[checked, "", "", order]];
     await this.write(range, values);
   },
 
   // Update item
   async updateItem(rowIndex, item, category) {
-    const range = `${CONFIG.sheets.shoppingListSheet}!A${rowIndex}:B${rowIndex}`;
+    const range = `'${CONFIG.sheets.shoppingListSheet}'!A${rowIndex}:B${rowIndex}`;
     const values = [[item, category]];
     await this.write(range, values);
   },
@@ -499,7 +502,7 @@ const SheetsAPI = {
   async deleteItem(rowIndex) {
     // Note: This is simplified. In production, you'd need to get the sheet ID first
     // For now, we'll just clear the row
-    const range = `${CONFIG.sheets.shoppingListSheet}!A${rowIndex}:F${rowIndex}`;
+    const range = `'${CONFIG.sheets.shoppingListSheet}'!A${rowIndex}:F${rowIndex}`;
     const values = [["", "", "", "", "", ""]];
     await this.write(range, values);
   },
@@ -523,7 +526,7 @@ const SheetsAPI = {
     ]);
 
     // Append to Cleared Items sheet
-    const range = `${CONFIG.sheets.clearedItemsSheet}!A:D`;
+    const range = `'${CONFIG.sheets.clearedItemsSheet}'!A:A`;
     await this.append(range, clearedItemsData);
 
     // Delete items from Shopping List (in reverse order to maintain indices)
@@ -536,9 +539,9 @@ const SheetsAPI = {
   async initializeSheets() {
     try {
       // Check if headers exist
-      const shoppingListRange = `${CONFIG.sheets.shoppingListSheet}!A1:F1`;
-      const categoriesRange = `${CONFIG.sheets.categoriesSheet}!A1:C1`;
-      const clearedItemsRange = `${CONFIG.sheets.clearedItemsSheet}!A1:D1`;
+      const shoppingListRange = `'${CONFIG.sheets.shoppingListSheet}'!A1:F1`;
+      const categoriesRange = `'${CONFIG.sheets.categoriesSheet}'!A1:C1`;
+      const clearedItemsRange = `'${CONFIG.sheets.clearedItemsSheet}'!A1:D1`;
 
       const shoppingHeaders = await this.read(shoppingListRange);
       if (!shoppingHeaders.length) {
@@ -567,7 +570,7 @@ const SheetsAPI = {
         ];
 
         await this.append(
-          `${CONFIG.sheets.categoriesSheet}!A:C`,
+          `'${CONFIG.sheets.categoriesSheet}'!A:A`,
           defaultCategories
         );
       }
