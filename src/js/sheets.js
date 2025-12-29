@@ -5,15 +5,14 @@ const SheetsAPI = {
   accessToken: null,
   userInfo: null,
   AUTH_STORAGE_KEY: "shopping_list_auth",
-  AUTH_EXPIRY_HOURS: 24,
+  AUTH_EXPIRY_HOURS: 1,
   AUTH_VERSION: 2, // Increment this when scopes change to force re-auth
   isRefreshingToken: false,
   tokenRefreshPromise: null,
 
   // Initialize Google API
   async init() {
-    return new Promise((resolve, reject) => {
-      // Load Google API client
+    const loadGapi = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = "https://apis.google.com/js/api.js";
       script.onload = () => {
@@ -33,8 +32,9 @@ const SheetsAPI = {
       };
       script.onerror = reject;
       document.head.appendChild(script);
+    });
 
-      // Load Google Identity Services
+    const loadGsi = new Promise((resolve, reject) => {
       const gsiScript = document.createElement("script");
       gsiScript.src = "https://accounts.google.com/gsi/client";
       gsiScript.onload = () => {
@@ -59,12 +59,16 @@ const SheetsAPI = {
             }
           },
         });
-
-        // Try to restore authentication from storage
-        this.restoreAuthFromStorage();
+        resolve();
       };
+      gsiScript.onerror = reject;
       document.head.appendChild(gsiScript);
     });
+
+    await Promise.all([loadGapi, loadGsi]);
+    
+    // Try to restore authentication from storage
+    await this.restoreAuthFromStorage();
   },
 
   // Save authentication to localStorage
@@ -78,7 +82,7 @@ const SheetsAPI = {
   },
 
   // Restore authentication from localStorage
-  restoreAuthFromStorage() {
+  async restoreAuthFromStorage() {
     try {
       const stored = localStorage.getItem(this.AUTH_STORAGE_KEY);
       if (!stored) return false;
@@ -93,9 +97,10 @@ const SheetsAPI = {
       }
 
       const age = Date.now() - authData.timestamp;
-      const maxAge = this.AUTH_EXPIRY_HOURS * 60 * 60 * 1000; // Convert hours to milliseconds
+      const maxAge = 50 * 60 * 1000; // 50 minutes (safe buffer for 1 hour token)
+      const refreshAge = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-      // Check if token is still valid (less than 24 hours old)
+      // Check if token is still valid
       if (age < maxAge && authData.accessToken) {
         this.accessToken = authData.accessToken;
         // Only set token if gapi.client is initialized
@@ -104,15 +109,21 @@ const SheetsAPI = {
         }
         this.isAuthenticated = true;
         console.log("Restored authentication from storage");
-
-        // Trigger auth success callback
-        if (window.onAuthSuccess) {
-          window.onAuthSuccess();
-        }
         return true;
+      } else if (age < refreshAge) {
+        // Token expired but within refresh window, try to refresh
+        console.log("Token expired, attempting silent refresh...");
+        try {
+            await this.refreshToken();
+            return true;
+        } catch (e) {
+            console.log("Silent refresh failed", e);
+            this.clearAuthStorage();
+            return false;
+        }
       } else {
-        // Token expired, clear storage
-        console.log("Stored token expired, clearing...");
+        // Token expired and too old, clear storage
+        console.log("Stored token expired and too old, clearing...");
         this.clearAuthStorage();
         return false;
       }
