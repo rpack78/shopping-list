@@ -143,7 +143,8 @@ const App = {
   setupNetworkListeners() {
     window.addEventListener("online", () => {
       UI.showStatus("Back online! Syncing...", "success");
-      UI.refreshList();
+      // Wait a moment for connection to stabilize, then silent refresh
+      setTimeout(() => UI.refreshList(true), 2000);
     });
 
     window.addEventListener("offline", () => {
