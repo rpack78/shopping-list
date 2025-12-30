@@ -223,7 +223,8 @@ const SheetsAPI = {
         
         if (response.access_token) {
           this.accessToken = response.access_token;
-          gapi.client.setToken({ access_token: response.access_token });
+          // Pass full response to gapi to ensure expires_in is handled
+          gapi.client.setToken(response);
           this.isAuthenticated = true;
           this.saveAuthToStorage(response.access_token);
           this.isRefreshingToken = false;
@@ -240,7 +241,7 @@ const SheetsAPI = {
 
       // Request a new token silently (without prompt if possible)
       try {
-        this.tokenClient.requestAccessToken({ prompt: "" });
+        this.tokenClient.requestAccessToken({ prompt: "none" });
       } catch (error) {
         console.error("Error requesting token refresh:", error);
         this.tokenClient.callback = originalCallback;
@@ -296,7 +297,7 @@ const SheetsAPI = {
   },
 
   // Read from spreadsheet
-  async read(range) {
+  async read(range, isRetry = false) {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: CONFIG.sheets.spreadsheetId,
@@ -307,8 +308,8 @@ const SheetsAPI = {
       console.error("Error reading from sheet:", error);
       
       // Handle 401 Unauthorized - token expired
-      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
-        return await this.handleUnauthorized(() => this.read(range));
+      if (!isRetry && (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401))) {
+        return await this.handleUnauthorized(() => this.read(range, true));
       }
       
       throw error;
@@ -316,7 +317,7 @@ const SheetsAPI = {
   },
 
   // Write to spreadsheet
-  async write(range, values) {
+  async write(range, values, isRetry = false) {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: CONFIG.sheets.spreadsheetId,
@@ -331,8 +332,8 @@ const SheetsAPI = {
       console.error("Error writing to sheet:", error);
       
       // Handle 401 Unauthorized - token expired
-      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
-        return await this.handleUnauthorized(() => this.write(range, values));
+      if (!isRetry && (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401))) {
+        return await this.handleUnauthorized(() => this.write(range, values, true));
       }
       
       throw error;
@@ -340,7 +341,7 @@ const SheetsAPI = {
   },
 
   // Append to spreadsheet
-  async append(range, values) {
+  async append(range, values, isRetry = false) {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.append({
         spreadsheetId: CONFIG.sheets.spreadsheetId,
@@ -356,8 +357,8 @@ const SheetsAPI = {
       console.error("Error appending to sheet:", error);
       
       // Handle 401 Unauthorized - token expired
-      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
-        return await this.handleUnauthorized(() => this.append(range, values));
+      if (!isRetry && (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401))) {
+        return await this.handleUnauthorized(() => this.append(range, values, true));
       }
       
       throw error;
@@ -365,7 +366,7 @@ const SheetsAPI = {
   },
 
   // Delete rows
-  async deleteRow(sheetId, rowIndex) {
+  async deleteRow(sheetId, rowIndex, isRetry = false) {
     try {
       const response = await gapi.client.sheets.spreadsheets.batchUpdate({
         spreadsheetId: CONFIG.sheets.spreadsheetId,
@@ -389,8 +390,8 @@ const SheetsAPI = {
       console.error("Error deleting row:", error);
       
       // Handle 401 Unauthorized - token expired
-      if (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401)) {
-        return await this.handleUnauthorized(() => this.deleteRow(sheetId, rowIndex));
+      if (!isRetry && (error.status === 401 || (error.result && error.result.error && error.result.error.code === 401))) {
+        return await this.handleUnauthorized(() => this.deleteRow(sheetId, rowIndex, true));
       }
       
       throw error;
